@@ -49,7 +49,7 @@ export class RouterService {
     return graph;
   }
 
-  findNearstRodeNode(graph: any, location: Coordinate) {
+  findNearstRodeNode(graph: RoadGraph, location: Coordinate) {
     let nearest: string | null = null;
     let shortest = Infinity;
 

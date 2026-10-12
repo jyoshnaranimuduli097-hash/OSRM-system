@@ -11,20 +11,14 @@ export class RouterController {
     @Body() inputdataDto: InputdataDto,
     @Req() req: ExpressRequest,
   ) {
+    console.log('activate')
     const graph = req.app.get('graph');
-    const startNode = this.routerService.findNearstRodeNode(
-      graph,
-      inputdataDto.startLocation,
-    )!;
-    const goalNode = this.routerService.findNearstRodeNode(
-      graph,
-      inputdataDto.goalLocation,
-    )!;
+    const startNode = this.routerService.findNearstRodeNode(graph,inputdataDto.startLocation,)!;
+    const goalNode = this.routerService.findNearstRodeNode(graph,inputdataDto.goalLocation,)!;
     const path = this.routerService.astar(graph, startNode, goalNode);
 
-    if (!path) {
-      return { message: 'No route found', path: [] };
-    }
+    if (!path) return { message: 'No route found', path: [] };
+    
 
     return {
       path: path.map((id) => graph[id]),

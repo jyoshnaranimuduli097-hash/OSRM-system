@@ -8,7 +8,9 @@ import { RouterService } from './router/router.service.js';
 
 async function bootstrap() {
 const app = await NestFactory.create(AppModule);
-  app.enableCors();
+  app.enableCors({
+    origin : '*'
+  });
 try {
 // Get RouterService from NestJS dependency injection
 const routerService = app.get(RouterService);
@@ -26,7 +28,7 @@ app.getHttpAdapter().getInstance().set('graph', graph);
 
   const configService = app.get(ConfigService)
   const PORT = configService.get<number>('PORT') || 5000
-  await app.listen(PORT,()=>{
+  await app.listen(PORT,'0.0.0.0',()=>{
     console.log(`app running on http://localhost:${PORT}`)
   });
 
