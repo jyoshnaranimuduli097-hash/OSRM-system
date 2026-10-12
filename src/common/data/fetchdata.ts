@@ -1,3 +1,4 @@
+
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
@@ -42,49 +43,63 @@ interface OSMData {
 }
 
 const fetchData = async (): Promise<OSMData> => {
-const currentFile = fileURLToPath(import.meta.url);
-const currentDir = path.dirname(currentFile);
+  const currentFile = fileURLToPath(import.meta.url);
+  const currentDir = path.dirname(currentFile);
 
-// Works when executing from dist/common/data
-const projectRoot = path.resolve(currentDir, '../../..');
+  // Works when executing from dist/common/data
+  const projectRoot = path.resolve(currentDir, '../../..');
 
-const pbfPath = path.join(
-  projectRoot,
-  'src',
-  'common',
-  'data',
-  'eastern-zone-261009.osm.pbf',
-);
+  const pbfPath = path.join(
+    projectRoot,
+    'src',
+    'common',
+    'data',
+    'eastern-zone-261009.osm.pbf',
+  );
 
-const jsonPath = path.join(
-  projectRoot,
-  'src',
-  'common',
-  'data',
-  'osm-data.json',
-);
+  const jsonPath = path.join(
+    projectRoot,
+    'src',
+    'common',
+    'data',
+    'osm-data.json',
+  );
 
-console.log('Project root:', projectRoot);
-console.log('PBF path:', pbfPath);
-console.log('PBF exists:', fs.existsSync(pbfPath));
+  console.log('Project root:', projectRoot);
+  console.log('JSON path:', jsonPath);
+  console.log('JSON exists:', fs.existsSync(jsonPath));
+
+  // Load the saved JSON first
+  if (fs.existsSync(jsonPath)) {
+    console.log('Loading saved OSM data...');
+
+    const rawData = fs.readFileSync(jsonPath, 'utf8');
+    const data = JSON.parse(rawData) as OSMData;
+
+    if (!Array.isArray(data.elements) || data.elements.length === 0) {
+      throw new Error('osm-data.json is empty or has an invalid format.');
+    }
+
+    console.log('OSM elements loaded:', data.elements.length);
+
+    return data;
+  }
+
+  // Use PBF only if the JSON file is unavailable
+  console.log('PBF path:', pbfPath);
+  console.log('PBF exists:', fs.existsSync(pbfPath));
+
+  if (!fs.existsSync(pbfPath)) {
+    throw new Error(
+      `Neither saved OSM JSON nor PBF file is available. JSON: ${jsonPath}`,
+    );
+  }
+
   // Whole Bhubaneswar approximate bounding box
   const south = 20.15;
   const west = 85.74;
   const north = 20.38;
   const east = 85.91;
-
-  if (!fs.existsSync(pbfPath)) {
-    throw new Error(`PBF file not found: ${pbfPath}`);
-  }
-
-  // Reuse converted data on future runs
-  if (fs.existsSync(jsonPath)) {
-    console.log('Loading saved OSM data...');
-
-    return JSON.parse(
-      fs.readFileSync(jsonPath, 'utf8'),
-    ) as OSMData;
-  }
 
   const { createOSMStream } = await import(
     'osm-pbf-parser-node'
@@ -140,7 +155,7 @@ console.log('PBF exists:', fs.existsSync(pbfPath));
 
   let roadCount = 0;
 
-  // Pass 2: Read road ways and build segments
+  // Pass 2: Read roads and build segments
   for await (const rawItem of createOSMStream(pbfPath)) {
     const item = rawItem as OSMItem;
 
